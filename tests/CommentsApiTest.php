@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Request;
 
 use Comms\Models\Comment;
 use Comms\Models\Post;
@@ -72,5 +73,20 @@ class CommentsApiTest extends TestCase
 
         $this->assertObjectNotHasAttribute('email', $comments[0]->replies[0]);
         $this->assertObjectNotHasAttribute('ip', $comments[0]->replies[0]);
+    }
+
+    public function testPostComment()
+    {
+        $post = factory(Post::class)->create();
+
+        $comment = factory(Comment::class)->make(['commentable_id' => $post->id, 'commentable_type' => 'Post']);
+
+        $response = $this->call('POST', '/api/comments', $comment->getAttributes());
+
+        $response_comment = json_decode($response->getContent());
+
+        $this->assertEquals(200, $response->getStatusCode(), $response->getStatusCode());
+        $this->assertEquals(1, Comment::count());
+        $this->assertEquals(md5(Request::ip()), $response_comment->ip_md5);
     }
 }
