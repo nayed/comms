@@ -17,17 +17,28 @@ class CommentsApiTest extends TestCase
     {
         $post = factory(Post::class)->create();
 
-        $comment = factory(Comment::class, 3)->create([
+        $comment = factory(Comment::class)->create([
+            'commentable_type' => 'Post',
+            'commentable_id' => 1
+        ]);
+
+        $comment2 = factory(Comment::class)->create([
+            'commentable_type' => 'Post',
+            'commentable_id' => 1,
+            'reply' => 1
+        ]);
+
+        $comment = factory(Comment::class)->create([
             'commentable_type' => 'Post',
             'commentable_id' => 1
         ]);
 
         //$this->assertEquals(1, Comment::count());
-        $response = $this->call('GET', '/api/comments', ['type' => 'Post', 'id' => $post->id]);
+        $response = $this->call('GET', '/api/comments', ['type' => 'Post', 'id' => $post->id, 'reply' => $comment2->id]);
 
         $comments = json_decode($response->getContent());
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals(3, Comment::count());
+        $this->assertEquals(2, count($comments));
         $this->assertSame(0, $comments[0]->reply);
     }
 }
