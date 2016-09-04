@@ -6,7 +6,21 @@ use Illuminate\Database\Eloquent\Model;
 
 class Comment extends Model
 {
-    public $guarded = [];
+    protected $guarded = [];
+
+    protected $hidden = ['email', 'ip'];
+
+    protected $appends = ['email_md5', 'ip_md5'];
+
+    public function getEmailMd5Attribute()
+    {
+        return md5($this->attributes['email']);
+    }
+
+    public function getIpMd5Attribute()
+    {
+        return md5($this->attributes['ip']);
+    }
 
     public static function allFor($model, $model_id)
     {
@@ -29,6 +43,6 @@ class Comment extends Model
             }
         }
 
-        return $comments;
+        return array_reverse($comments);
     }
 }
