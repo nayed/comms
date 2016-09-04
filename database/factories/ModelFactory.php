@@ -11,7 +11,7 @@
 |
 */
 
-$factory->define(Comms\User::class, function (Faker\Generator $faker) {
+$factory->define(Comms\Models\User::class, function (Faker\Generator $faker) {
     static $password;
 
     return [
@@ -19,5 +19,20 @@ $factory->define(Comms\User::class, function (Faker\Generator $faker) {
         'email' => $faker->safeEmail,
         'password' => $password ?: $password = bcrypt('secret'),
         'remember_token' => str_random(10),
+    ];
+});
+
+$factory->define(Comms\Models\Comment::class, function (Faker\Generator $faker) {
+    return [
+        'username' => $faker->userName,
+        'email' => $faker->email,
+        'content' => $faker->sentence,
+        'ip' => $faker->ipv4
+    ];
+});
+
+$factory->define(Comms\Models\Post::class, function (Faker\Generator $faker) {
+    return [
+        'name' => $faker->name
     ];
 });
