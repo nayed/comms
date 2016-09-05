@@ -97,4 +97,19 @@ class CommentsApiTest extends TestCase
         $this->assertEquals(422, $response->getStatusCode());
         $this->assertEquals(0, Comment::count());        
     }
+
+    public function testPostCommentWithFakeEmail()
+    {
+        $post = factory(Post::class)->create();
+
+        $comment = factory(Comment::class)->make(['commentable_id' => $post->id, 'commentable_type' => 'Post', 'email' => 'fake@']);
+
+        $response = $this->call('POST', '/api/comments', $comment->getAttributes());
+
+        $json = json_decode($response->getContent());
+
+        $this->assertEquals(422, $response->getStatusCode(), $response->getStatusCode());
+        $this->assertEquals(0, Comment::count());
+        $this->assertObjectHasAttribute('email', $json);
+    }
 }

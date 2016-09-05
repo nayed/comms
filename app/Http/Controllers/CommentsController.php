@@ -11,6 +11,8 @@ use Comms\Http\Requests;
 
 use Comms\Models\Comment;
 
+use Comms\Http\Requests\StoreCommentRequest;
+
 class CommentsController extends Controller
 {
     public function index()
@@ -20,7 +22,7 @@ class CommentsController extends Controller
         return Response::json($comments, 200, [], JSON_NUMERIC_CHECK);
     }
 
-    public function store()
+    public function store(StoreCommentRequest $request)
     {
         $model_id = Input::get('commentable_id');
         $model = Input::get('commentable_type');
@@ -32,7 +34,7 @@ class CommentsController extends Controller
                 'email' => Input::get('email'),
                 'username' => Input::get('username'),
                 'reply' => Input::get('reply', 0),
-                'ip' => \Illuminate\Support\Facades\Request::ip()
+                'ip' => $request->ip()
             ]);
             return Response::json($comment, 200, [], JSON_NUMERIC_CHECK);
         }
