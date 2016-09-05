@@ -12,6 +12,8 @@ class Comment extends Model
 
     protected $appends = ['email_md5', 'ip_md5'];
 
+    protected static $commentable_for = ['Post', 'Tutorial'];
+
     public function getEmailMd5Attribute()
     {
         return md5($this->attributes['email']);
@@ -44,5 +46,16 @@ class Comment extends Model
         }
 
         return array_reverse($comments);
+    }
+
+    public static function isCommentable($model, $model_id)
+    {
+        if (!in_array($model, self::$commentable_for)) {
+            return false;
+        }
+        else {
+            $model = "\\Comms\\Models\\$model";
+            return $model::where(['id' => $model_id])->exists();
+        }
     }
 }

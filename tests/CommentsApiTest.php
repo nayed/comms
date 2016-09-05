@@ -89,4 +89,12 @@ class CommentsApiTest extends TestCase
         $this->assertEquals(1, Comment::count());
         $this->assertEquals(md5(Request::ip()), $response_comment->ip_md5);
     }
+
+    public function testPostCommentOnFakeContent()
+    {
+        $comment = factory(Comment::class)->make(['commentable_id' => 30, 'commentable_type' => 'Posft']);
+        $response = $this->call('POST', '/api/comments', $comment->getAttributes());
+        $this->assertEquals(422, $response->getStatusCode());
+        $this->assertEquals(0, Comment::count());        
+    }
 }
