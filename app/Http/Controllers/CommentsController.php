@@ -46,6 +46,7 @@ class CommentsController extends Controller
     public function destroy(Comment $comment)
     {
         if ($comment->ip == Req::ip()) {
+            Comment::where('reply', '=', $comment->id)->delete();
             $comment->delete();
             return Response::json($comment, 200, [], JSON_NUMERIC_CHECK);
         }

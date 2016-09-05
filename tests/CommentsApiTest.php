@@ -168,4 +168,17 @@ class CommentsApiTest extends TestCase
         $this->assertEquals(403, $response->getStatusCode(), $response->getContent());
         $this->assertEquals(1, Comment::count());
     }
+
+    public function testCascadingDelete()
+    {
+        $post = factory(Post::class)->create();
+        $ip = Request::ip();
+        $comment = factory(Comment::class)->create(['commentable_id' => $post->id, 'commentable_type' => 'Post', 'ip' => $ip]);
+        $reply = factory(Comment::class)->create(['commentable_id' => $post->id, 'commentable_type' => 'Post', 'reply' => $comment->id]);
+
+        $response = $this->call('DELETE', 'api/comments/' . $comment->id);
+
+        $this->assertEquals(200, $response->getStatusCode(), $response->getContent());
+        $this->assertEquals(0, Comment::count());
+    }
 }
