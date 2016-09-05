@@ -14,30 +14,39 @@ class CommentsApiTest extends TestCase
         Artisan::call('migrate');
     }
 
+    private function createBasicComment($post, $appendKey = null, $appendValue = null)
+    {
+        if (!is_null($appendKey) && !is_null($appendValue)) {
+            return factory(Comment::class)->create([
+                'commentable_type' => 'Post',
+                'commentable_id' => $post->id,
+                $appendKey => $appendValue
+            ]);
+        }
+
+        return factory(Comment::class)->create([
+            'commentable_type' => 'Post',
+            'commentable_id' => $post->id
+        ]);
+    }
+
     public function testGetComments()
     {
         $post = factory(Post::class)->create();
 
-        $comment = factory(Comment::class)->create([
-            'commentable_type' => 'Post',
-            'commentable_id' => $post->id
-        ]);
+        $comment = $this->createBasicComment($post);
 
         $comment2 = factory(Comment::class)->create([
             'commentable_type' => 'Post',
             'commentable_id' => $post->id
         ]);
 
-        $comment3 = factory(Comment::class)->create([
-            'commentable_type' => 'Post',
-            'commentable_id' => $post->id,
-            'reply' => 1
-        ]);
+        $comment3 = $this->createBasicComment($post, 'reply', 1);
 
         $response = $this->call('GET', '/api/comments', ['type' => 'Post', 'id' => $post->id]);
 
         $comments = json_decode($response->getContent());
-        //dd($comments);
+
         $this->assertEquals(200, $response->getStatusCode(), $response->getContent());
         $this->assertEquals(2, count($comments));
         $this->assertSame(0, $comments[0]->reply);
@@ -50,16 +59,9 @@ class CommentsApiTest extends TestCase
     {
         $post = factory(Post::class)->create();
 
-        $comment = factory(Comment::class)->create([
-            'commentable_type' => 'Post',
-            'commentable_id' => $post->id
-        ]);
+        $comment = $this->createBasicComment($post);
 
-        $reply = factory(Comment::class)->create([
-            'commentable_type' => 'Post',
-            'commentable_id' => $post->id,
-            'reply' => $comment->id
-        ]);
+        $reply = $this->createBasicComment($post, 'reply', $comment->id);
 
         $response = $this->call('GET', '/api/comments', ['type' => 'Post', 'id' => $post->id]);
 
@@ -83,11 +85,12 @@ class CommentsApiTest extends TestCase
 
         $response = $this->call('POST', '/api/comments', $comment->getAttributes());
 
-        $response_comment = json_decode($response->getContent());
+        $json = json_decode($response->getContent());
 
         $this->assertEquals(200, $response->getStatusCode(), $response->getStatusCode());
         $this->assertEquals(1, Comment::count());
-        $this->assertEquals(md5(Request::ip()), $response_comment->ip_md5);
+        $this->assertEquals(md5(Request::ip()), $json->ip_md5);
+        $this->assertEquals($json->commentable_id, $post->id);
     }
 
     public function testPostCommentOnFakeContent()
@@ -132,8 +135,8 @@ class CommentsApiTest extends TestCase
     {
         $post = factory(Post::class)->create();
 
-        $comment = factory(Comment::class)->create(['commentable_id' => $post->id, 'commentable_type' => 'Post']);
-        $reply = factory(Comment::class)->create(['commentable_id' => $post->id, 'commentable_type' => 'Post', 'reply' => $comment->id]);
+        $comment = $this->createBasicComment($post);
+        $reply = $this->createBasicComment($post, 'reply', $comment->id);
         $reply2 = factory(Comment::class)->make(['commentable_id' => $post->id, 'commentable_type' => 'Post', 'reply' => $reply->id]);
 
         $response = $this->call('POST', '/api/comments', $reply2->getAttributes());
@@ -149,7 +152,7 @@ class CommentsApiTest extends TestCase
     {
         $post = factory(Post::class)->create();
 
-        $comment = factory(Comment::class)->create(['commentable_id' => $post->id, 'commentable_type' => 'Post', 'ip' => Request::ip()]);
+        $comment = $this->createBasicComment($post, 'ip', Request::ip());
 
         $response = $this->call('DELETE', 'api/comments/' . $comment->id);
 
@@ -161,7 +164,7 @@ class CommentsApiTest extends TestCase
     {
         $post = factory(Post::class)->create();
 
-        $comment = factory(Comment::class)->create(['commentable_id' => $post->id, 'commentable_type' => 'Post']);
+        $comment = $this->createBasicComment($post);
 
         $response = $this->call('DELETE', 'api/comments/' . $comment->id);
 
@@ -172,9 +175,8 @@ class CommentsApiTest extends TestCase
     public function testCascadingDelete()
     {
         $post = factory(Post::class)->create();
-        $ip = Request::ip();
-        $comment = factory(Comment::class)->create(['commentable_id' => $post->id, 'commentable_type' => 'Post', 'ip' => $ip]);
-        $reply = factory(Comment::class)->create(['commentable_id' => $post->id, 'commentable_type' => 'Post', 'reply' => $comment->id]);
+        $comment = $this->createBasicComment($post, 'ip', Request::ip());
+        $reply = $this->createBasicComment($post, 'reply', $comment->id);
 
         $response = $this->call('DELETE', 'api/comments/' . $comment->id);
 

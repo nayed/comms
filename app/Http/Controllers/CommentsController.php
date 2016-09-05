@@ -28,8 +28,8 @@ class CommentsController extends Controller
         $model = Input::get('commentable_type');
         if (Comment::isCommentable($model, $model_id)) {
             $comment = Comment::create([
-                'commentable_id' => $model,
-                'commentable_type' => $model_id,
+                'commentable_id' => $model_id,
+                'commentable_type' => $model,
                 'content' => Input::get('content'),
                 'email' => Input::get('email'),
                 'username' => Input::get('username'),
