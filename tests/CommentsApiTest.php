@@ -144,4 +144,28 @@ class CommentsApiTest extends TestCase
         $this->assertEquals(2, Comment::count());
         $this->assertObjectHasAttribute('reply', $json);
     }
+
+    public function testDeleteComment()
+    {
+        $post = factory(Post::class)->create();
+
+        $comment = factory(Comment::class)->create(['commentable_id' => $post->id, 'commentable_type' => 'Post', 'ip' => Request::ip()]);
+
+        $response = $this->call('DELETE', 'api/comments/' . $comment->id);
+
+        $this->assertEquals(200, $response->getStatusCode(), $response->getContent());
+        $this->assertEquals(0, Comment::count());
+    }
+
+    public function testDeleteCommentWithoutIp()
+    {
+        $post = factory(Post::class)->create();
+
+        $comment = factory(Comment::class)->create(['commentable_id' => $post->id, 'commentable_type' => 'Post']);
+
+        $response = $this->call('DELETE', 'api/comments/' . $comment->id);
+
+        $this->assertEquals(403, $response->getStatusCode(), $response->getContent());
+        $this->assertEquals(1, Comment::count());
+    }
 }

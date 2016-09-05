@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Input;
-
+use Illuminate\Support\Facades\Request as Req;
 use Comms\Http\Requests;
 
 use Comms\Models\Comment;
@@ -40,6 +40,17 @@ class CommentsController extends Controller
         }
         else {
             return Response::json('Yo, this content is not commentable', 422);
+        }
+    }
+
+    public function destroy(Comment $comment)
+    {
+        if ($comment->ip == Req::ip()) {
+            $comment->delete();
+            return Response::json($comment, 200, [], JSON_NUMERIC_CHECK);
+        }
+        else {
+            return Response::json('Yo this is not your comment', 403);
         }
     }
 }
